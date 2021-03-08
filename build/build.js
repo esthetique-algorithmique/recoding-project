@@ -1,24 +1,80 @@
 var gui = new dat.GUI();
 var params = {
-    widthHead: 200,
-    heightHead: 229,
+    N: 0,
+    NBLONGUEUR: 5,
+    NBHAUTEUR: 5,
+    MULTIPLE: 5,
+    multTransfo: 5,
     Download_Image: function () { return save(); },
 };
-gui.add(params, "widthHead", 200, 1000, 1);
-gui.add(params, "heightHead", 229, 1000, 1);
+gui.add(params, "N", 0, 1000, 1);
+gui.add(params, "NBLONGUEUR", 0, 100, 1);
+gui.add(params, "NBHAUTEUR", 0, 100, 1);
+gui.add(params, "MULTIPLE", 1, 20, 1);
+gui.add(params, "multTransfo", 0, 100, 1);
 gui.add(params, "Download_Image");
+var shiftBRXover;
+var shiftTRXover;
+var shiftBLYover;
+var shiftBRYover;
 function draw() {
-    background('green');
-    fill('yellow');
-    rectMode(CENTER);
-    noStroke();
-    rect(width / 2, height - 200, 700, 300);
-    fill('red');
-    triangle((width / 2) - 350, height - 350, (height / 2), (width / 2) - 100, (width / 2) + 350, height - 350);
-    fill('darkred');
-    triangle((width / 2) + 380, height - 370, (height / 2), (width / 2) - 100, (width / 2) + 350, height - 350);
-    fill('orange');
-    quad((width / 2) + 380, height - 370, (width / 2) + 350, height - 350, (width / 2) + 350, height - 50, (width / 2) + 380, height - 70);
+    randomSeed(params.N);
+    print("coucou");
+    var beginPathX = random(1, 5) * params.MULTIPLE;
+    var beginPathY = random(1, 5) * params.MULTIPLE;
+    var shiftBRX = random(1, 3) * params.MULTIPLE;
+    shiftBRXover = shiftBRX;
+    var shiftBRY = random(1, 3) * params.MULTIPLE;
+    shiftBRYover = shiftBRY;
+    var shiftTRX = random(5, 10) * params.MULTIPLE;
+    shiftTRXover = shiftTRX;
+    var shiftBLY = random(1, 5) * params.MULTIPLE;
+    shiftBLYover = shiftBLY;
+    var coordonateX = [];
+    var coordonateY = [];
+    background('black');
+    stroke('white');
+    for (var h = 0; h < params.NBHAUTEUR; h++) {
+        for (var i = 0; i < params.NBLONGUEUR; i += 2) {
+            lineCustom(beginPathX, beginPathY, beginPathX + shiftBRX, beginPathY + shiftBRY);
+            lineCustom(beginPathX + shiftBRX, beginPathY + shiftBRY, beginPathX + shiftBRX + shiftTRX, +beginPathY);
+            coordonateX[i] = beginPathX + shiftBRX;
+            coordonateY[i] = beginPathY + shiftBRY;
+            coordonateX[i + 1] = beginPathX + shiftBRX + shiftTRX;
+            coordonateY[i + 1] = beginPathY;
+            beginPathX = beginPathX + shiftBRX + shiftTRX;
+        }
+        coordonateX.forEach(function (x, i) {
+            lineCustom(x, coordonateY[i], x - shiftBRX, coordonateY[i] + shiftBLY);
+            coordonateX[i] = x - shiftBRX;
+            coordonateY[i] = coordonateY[i] + shiftBLY;
+        });
+        for (var i = 0; i < coordonateX.length; i++) {
+            lineCustom(coordonateX[i], coordonateY[i], coordonateX[i + 1], coordonateY[i + 1]);
+        }
+        var lastX = coordonateX[coordonateX.length - 1];
+        var lastY = coordonateY[coordonateY.length - 1];
+        lineCustom(lastX, lastY, lastX + shiftBRX, lastY + shiftBRY);
+        beginPathX = coordonateX[0];
+        beginPathY = coordonateY[0];
+    }
+}
+function lineCustom(x1, y1, x2, y2) {
+    var vector = shifterPro(x1, y1);
+    var vector2 = shifterPro(x2, y2);
+    line(vector.x + x1, vector.y + y1, vector2.x + x2, vector2.y + y2);
+}
+function shifterPro(coordX, coordY) {
+    var distanceX = (shiftBRXover + shiftTRXover) * params.NBLONGUEUR;
+    var middleX = distanceX / 4;
+    var distanceY = (shiftBRXover + shiftBLYover) * params.NBHAUTEUR;
+    var middleY = distanceY / 2;
+    var centerDistX = abs(middleX - coordX) / middleX;
+    var centerDistY = abs(middleY - coordY) / middleY;
+    print(centerDistX + "   " + middleX);
+    var vector = p5.Vector.fromAngle(((sin(coordX * 12.9898 + coordY * 78.233) * 43758.5453) % 1) * TWO_PI);
+    var vectorX = vector.mult((1 - centerDistY) * (1 - centerDistX) * params.multTransfo);
+    return vectorX;
 }
 function setup() {
     p6_CreateCanvas();
