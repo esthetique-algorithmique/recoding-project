@@ -1,25 +1,33 @@
 var gui = new dat.GUI();
 var params = {
-    N: 0,
-    NBLONGUEUR: 5,
-    NBHAUTEUR: 5,
+    RANDOM_SEED: 0,
+    PERLIN_SEED: 0,
+    NBLONGUEUR: 18,
+    NBHAUTEUR: 18,
     MULTIPLE: 5,
     multTransfo: 5,
+    mouseMoving: false,
+    Perlin: false,
+    DarkMode: false,
     Download_Image: function () { return save(); },
 };
-gui.add(params, "N", 0, 1000, 1);
+gui.add(params, "RANDOM_SEED", 0, 1000, 1);
+gui.add(params, "PERLIN_SEED", 0, 1000, 1);
 gui.add(params, "NBLONGUEUR", 0, 100, 1);
 gui.add(params, "NBHAUTEUR", 0, 100, 1);
 gui.add(params, "MULTIPLE", 1, 20, 1);
-gui.add(params, "multTransfo", 0, 100, 1);
+gui.add(params, "multTransfo", 0, 1000, 1);
+gui.add(params, "mouseMoving");
+gui.add(params, "Perlin");
+gui.add(params, "DarkMode");
 gui.add(params, "Download_Image");
 var shiftBRXover;
 var shiftTRXover;
 var shiftBLYover;
 var shiftBRYover;
 function draw() {
-    randomSeed(params.N);
-    print("coucou");
+    randomSeed(params.RANDOM_SEED);
+    noiseSeed(params.PERLIN_SEED);
     var beginPathX = random(1, 5) * params.MULTIPLE;
     var beginPathY = random(1, 5) * params.MULTIPLE;
     var shiftBRX = random(1, 3) * params.MULTIPLE;
@@ -32,8 +40,14 @@ function draw() {
     shiftBLYover = shiftBLY;
     var coordonateX = [];
     var coordonateY = [];
-    background('black');
-    stroke('white');
+    if (params.DarkMode == true) {
+        background('black');
+        stroke('white');
+    }
+    else {
+        background('#FFFFFF');
+        stroke('black');
+    }
     for (var h = 0; h < params.NBHAUTEUR; h++) {
         for (var i = 0; i < params.NBLONGUEUR; i += 2) {
             lineCustom(beginPathX, beginPathY, beginPathX + shiftBRX, beginPathY + shiftBRY);
@@ -71,8 +85,13 @@ function shifterPro(coordX, coordY) {
     var middleY = distanceY / 2;
     var centerDistX = abs(middleX - coordX) / middleX;
     var centerDistY = abs(middleY - coordY) / middleY;
-    print(centerDistX + "   " + middleX);
-    var vector = p5.Vector.fromAngle(((sin(coordX * 12.9898 + coordY * 78.233) * 43758.5453) % 1) * TWO_PI);
+    var mult = params.mouseMoving ? mouseX / 500 : 1;
+    if (params.Perlin) {
+        var vector = p5.Vector.fromAngle(noise(coordX, coordY) * mult);
+    }
+    else {
+        var vector = p5.Vector.fromAngle(((sin(coordX * 12.9898 + coordY * 78.233) * 43758.5453) % 1) * TWO_PI * mult);
+    }
     var vectorX = vector.mult((1 - centerDistY) * (1 - centerDistX) * params.multTransfo);
     return vectorX;
 }
